@@ -24,7 +24,6 @@ class SanitizeMpopProcessor(Processor):
             if 'request' in frame['vars']:
                 bits = []
                 for bit in frame['vars']['request'].split('\n'):
-                    print bit
                     if 'Mpop' in bit:
                         key, value = bit.split(': \'', 1)
                         bit = ': \''.join((key, self.sanitize(value)))
