@@ -19,7 +19,6 @@ setup(
     author_email='pzinovkin@gmail.com',
     url='https://github.com/pzinovkin/raven-mailru',
     description='Data processor for Raven',
-    long_description=read('README.rst'),
     packages=find_packages(exclude=['tests']),
     zip_safe=False,
     install_requires=install_requires,
