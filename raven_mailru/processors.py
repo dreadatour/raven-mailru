@@ -51,7 +51,7 @@ class SanitizeMpopProcessor(Processor):
                 data[n]['Cookie'] = '; '.join('='.join(k) for k in bits)
 
             if 'Authorization' in data[n]:
-                if data[n]['Authorization'].lower().starswith('basic '):
+                if data[n]['Authorization'].lower().startswith('basic '):
                     data[n]['Authorization'] = 'Basic ********'
 
     def process(self, data, **kwargs):
