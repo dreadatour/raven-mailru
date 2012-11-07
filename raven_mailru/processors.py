@@ -13,6 +13,22 @@ class SanitizeMpopProcessor(Processor):
     def sanitize(self, value):
         return self.SEARCH_RE.sub(r'\1********\3', value)
 
+    def recursive_cookie_clear(self, var):
+        """
+        Recursive walk through 'var' dict and sanitize all 'cookies' vars.
+        """
+        if not isinstance(var, dict):
+            return
+
+        for key in var:
+            if key.lower() not in ('cookie', 'cookies'):
+                self.recursive_cookie_clear(var[key])
+                continue
+
+            for cookie_key in var[key]:
+                if cookie_key.lower() == 'mpop':
+                    var[key][cookie_key] = self.sanitize(var[key][cookie_key])
+
     def filter_stacktrace(self, data):
         if 'frames' not in data:
             return
@@ -20,6 +36,8 @@ class SanitizeMpopProcessor(Processor):
         for frame in data['frames']:
             if 'vars' not in frame:
                 continue
+
+            self.recursive_cookie_clear(frame['vars'])
 
             if 'request' in frame['vars']:
                 bits = []
