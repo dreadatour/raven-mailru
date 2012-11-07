@@ -14,7 +14,7 @@ install_requires = [
 
 setup(
     name='raven_mailru',
-    version='0.2',
+    version='0.2.1',
     author='Pavel Zinovkin',
     author_email='pzinovkin@gmail.com',
     url='https://github.com/pzinovkin/raven-mailru',
