@@ -25,6 +25,9 @@ class SanitizeMpopProcessor(Processor):
                 self.recursive_cookie_clear(var[key])
                 continue
 
+            if not hasattr(var[key], '__iter__'):
+                continue
+
             for cookie_key in var[key]:
                 if cookie_key.lower() == 'mpop':
                     var[key][cookie_key] = self.sanitize(var[key][cookie_key])
