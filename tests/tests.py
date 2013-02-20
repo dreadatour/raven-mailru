@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import base64
+
 from mock import Mock
 from unittest import TestCase
 from raven_mailru.processors import SanitizeMpopProcessor
@@ -6,6 +8,9 @@ from raven_mailru.processors import SanitizeMpopProcessor
 
 COOKIE = '1234567890:050a0f170a021b04041d064568515c455f:test@mail.ru:'
 SANITIZED = '1234567890:********:test@mail.ru:'
+
+AUTHORIZATION = 'Basic %s' % base64.b64encode("username:password")
+AUTH_SANITIZED = 'Basic username:********'
 
 
 class SanitizeMpopProcessorTest(TestCase):
@@ -20,6 +25,7 @@ class SanitizeMpopProcessorTest(TestCase):
                 },
                 'headers': {
                     'Accept-Language': 'en-us,en;q=0.5',
+                    'Authorization': AUTHORIZATION,
                     'Cookie': (
                         'csrftoken=4a4baPyR8yDlT0fgSmAHj2dlr2Z6ZBCJ; '
                         'Mpop=' + COOKIE + '; '
@@ -35,6 +41,7 @@ class SanitizeMpopProcessorTest(TestCase):
         http = result['sentry.interfaces.Http']
         self.assertEqual(SANITIZED, http['cookies']['Mpop'])
         self.assertIn(SANITIZED, http['headers']['Cookie'])
+        self.assertEqual(http['headers']['Authorization'], AUTH_SANITIZED)
 
     def test_stacktrace(self):
         request = (

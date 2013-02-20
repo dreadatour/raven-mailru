@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import re
+import base64
 
 from raven.processors import Processor
 
@@ -73,7 +74,10 @@ class SanitizeMpopProcessor(Processor):
 
             if 'Authorization' in data[n]:
                 if data[n]['Authorization'].lower().startswith('basic '):
-                    data[n]['Authorization'] = 'Basic ********'
+                    username = base64.b64decode(
+                        data[n]['Authorization'][6:]
+                    ).split(':')[0]
+                    data[n]['Authorization'] = 'Basic %s:********' % username
 
     def process(self, data, **kwargs):
 
