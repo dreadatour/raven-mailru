@@ -123,25 +123,43 @@ class AddMpopUserProcessor(Processor):
         """
         Get user id and email from cookies.
         """
-        try:
-            cookie = data['sentry.interfaces.Http']['cookies']['Mpop']
-        except (KeyError, TypeError):
+        http_data = data.get('sentry.interfaces.Http')
+        if http_data is None:
             return
 
-        cookie_elements = cookie.split(':', 3)
-        if len(cookie_elements) == 4:
-            return {
-                'is_authenticated': True,
-                'swa_id': cookie_elements[0],
-                'email': cookie_elements[2],
-            }
+        try:
+            mpop_cookie = http_data['cookies']['Mpop']
+        except (KeyError, TypeError):
+            pass
+        else:
+            try:
+                user_email = mpop_cookie.split(':', 3)[2]
+            except (AttributeError, IndexError):
+                pass
+            else:
+                return {'email': user_email}
+
+        try:
+            basic_auth = http_data['headers']['Authorization']
+        except (KeyError, TypeError):
+            pass
+        else:
+            try:
+                user_email = basic_auth.split(' ')[1].split(':')[0]
+            except (AttributeError, IndexError):
+                pass
+            else:
+                return {'email': user_email}
+
+        return
 
     def process(self, data, **kwargs):
         """
         Process sentry data - get user info from cookies
         and add this info to report.
         """
-        if 'sentry.interfaces.User' not in data:
+        user_info = data.get('sentry.interfaces.User')
+        if user_info is None or 'email' not in user_info:
             email_info = self.get_user_info(data)
             if email_info is not None:
                 data['sentry.interfaces.User'] = email_info
