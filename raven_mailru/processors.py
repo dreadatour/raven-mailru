@@ -111,3 +111,39 @@ class SanitizeMpopProcessor(Processor):
             self.filter_http(data['sentry.interfaces.Http'])
 
         return data
+
+
+class AddMpopUserProcessor(Processor):
+    """
+    Get user info from cookies and add this to sentry report.
+    """
+    SEARCH_RE = re.compile(r'^(\d+):[^:]+:([^:]+):')
+
+    def get_user_info(self, data):
+        """
+        Get user id and email from cookies.
+        """
+        try:
+            cookie = data['sentry.interfaces.Http']['cookies']['Mpop']
+        except (KeyError, TypeError):
+            return
+
+        cookie_elements = cookie.split(':', 3)
+        if len(cookie_elements) == 4:
+            return {
+                'is_authenticated': True,
+                'swa_id': cookie_elements[0],
+                'email': cookie_elements[2],
+            }
+
+    def process(self, data, **kwargs):
+        """
+        Process sentry data - get user info from cookies
+        and add this info to report.
+        """
+        if 'sentry.interfaces.User' not in data:
+            email_info = self.get_user_info(data)
+            if email_info is not None:
+                data['sentry.interfaces.User'] = email_info
+
+        return data
