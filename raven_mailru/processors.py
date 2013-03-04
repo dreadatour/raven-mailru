@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+"""
+Sentry processors for mail.ru project.
+Remove all mail.ru sensitive data from sentry report.
+"""
 import re
 import base64
 
@@ -12,6 +16,9 @@ class SanitizeMpopProcessor(Processor):
     SEARCH_RE = re.compile(r'^(\d+:)(\w+)(:.+)')
 
     def sanitize(self, value):
+        """
+        Sanitize Mpop cookie.
+        """
         return self.SEARCH_RE.sub(r'\1********\3', value)
 
     def recursive_cookie_clear(self, var):
@@ -34,6 +41,10 @@ class SanitizeMpopProcessor(Processor):
                     var[key][cookie_key] = self.sanitize(var[key][cookie_key])
 
     def filter_stacktrace(self, data):
+        """
+        Recursive walk through stacktrace and sanitize
+        all 'Mpop' vars in request.
+        """
         if 'frames' not in data:
             return
 
@@ -83,7 +94,9 @@ class SanitizeMpopProcessor(Processor):
                     data[n]['Authorization'] = 'Basic %s:********' % username
 
     def process(self, data, **kwargs):
-
+        """
+        Process sentry data - strip all mail.ru sensitive data.
+        """
         if 'sentry.interfaces.Stacktrace' in data:
             self.filter_stacktrace(data['sentry.interfaces.Stacktrace'])
 
