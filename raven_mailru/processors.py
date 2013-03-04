@@ -15,7 +15,7 @@ class SanitizeMpopProcessor(Processor):
     """
     SEARCH_RE = re.compile(r'^(\d+:)(\w+)(:.+)')
 
-    def sanitize(self, value):
+    def sanitize_cookie(self, value):
         """
         Sanitize Mpop cookie.
         """
@@ -38,7 +38,8 @@ class SanitizeMpopProcessor(Processor):
 
             for cookie_key in var[key]:
                 if cookie_key.lower() == 'mpop':
-                    var[key][cookie_key] = self.sanitize(var[key][cookie_key])
+                    cookie_value = self.sanitize_cookie(var[key][cookie_key])
+                    var[key][cookie_key] = cookie_value
 
     def filter_stacktrace(self, data):
         """
@@ -62,7 +63,7 @@ class SanitizeMpopProcessor(Processor):
             for bit in request.split('\n'):
                 if 'Mpop' in bit:
                     key, value = bit.split(': \'', 1)
-                    bit = ': \''.join((key, self.sanitize(value)))
+                    bit = ': \''.join((key, self.sanitize_cookie(value)))
                 bits.append(bit)
 
             frame['vars']['request'] = '\n'.join(bits)
@@ -74,14 +75,14 @@ class SanitizeMpopProcessor(Processor):
                 continue
 
             if 'Mpop' in data[n]:
-                data[n]['Mpop'] = self.sanitize(data[n]['Mpop'])
+                data[n]['Mpop'] = self.sanitize_cookie(data[n]['Mpop'])
 
             if 'Cookie' in data[n]:
                 bits = []
                 for bit in data[n]['Cookie'].split('; '):
                     key, value = bit.split('=', 1)
                     if key == 'Mpop':
-                        value = self.sanitize(value)
+                        value = self.sanitize_cookie(value)
                     bits.append((key, value))
 
                 data[n]['Cookie'] = '; '.join('='.join(k) for k in bits)
