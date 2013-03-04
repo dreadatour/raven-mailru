@@ -39,19 +39,22 @@ class SanitizeMpopProcessor(Processor):
 
         for frame in data['frames']:
             if 'vars' not in frame:
-                continue
+                continue  # skip frame if no 'vars' in it
 
             self.recursive_cookie_clear(frame['vars'])
 
-            if 'request' in frame['vars']:
-                bits = []
-                for bit in frame['vars']['request'].split('\n'):
-                    if 'Mpop' in bit:
-                        key, value = bit.split(': \'', 1)
-                        bit = ': \''.join((key, self.sanitize(value)))
-                    bits.append(bit)
+            request = frame['vars'].get('request')
+            if not isinstance(request, basestring):
+                continue  # skip frame if no 'request' string in it
 
-                frame['vars']['request'] = '\n'.join(bits)
+            bits = []
+            for bit in request.split('\n'):
+                if 'Mpop' in bit:
+                    key, value = bit.split(': \'', 1)
+                    bit = ': \''.join((key, self.sanitize(value)))
+                bits.append(bit)
+
+            frame['vars']['request'] = '\n'.join(bits)
 
     def filter_http(self, data):
         for n in ('cookies', 'headers'):
