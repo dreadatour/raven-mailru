@@ -56,7 +56,7 @@ class SanitizeMpopProcessor(Processor):
             self.recursive_cookie_clear(frame['vars'])
 
             request = frame['vars'].get('request')
-            if not isinstance(request, basestring):
+            if request is None or not isinstance(request, basestring):
                 continue  # skip frame if no 'request' string in it
 
             bits = []
@@ -80,9 +80,11 @@ class SanitizeMpopProcessor(Processor):
             if 'Mpop' in data[n]:
                 data[n]['Mpop'] = self.sanitize_cookie(data[n]['Mpop'])
 
-            if 'Cookie' in data[n]:
+            cookie = data[n].get('Cookie')
+            if cookie is not None and isinstance(cookie, basestring):
                 bits = []
-                for bit in data[n]['Cookie'].split('; '):
+
+                for bit in cookie.split('; '):
                     key, value = bit.split('=', 1)
                     if key == 'Mpop':
                         value = self.sanitize_cookie(value)
@@ -90,8 +92,9 @@ class SanitizeMpopProcessor(Processor):
 
                 data[n]['Cookie'] = '; '.join('='.join(k) for k in bits)
 
-            if 'Authorization' in data[n]:
-                if data[n]['Authorization'].lower().startswith('basic '):
+            basic_auth = data[n].get('Authorization')
+            if basic_auth is not None and isinstance(basic_auth, basestring):
+                if basic_auth.lower().startswith('basic '):
                     username = base64.b64decode(
                         data[n]['Authorization'][6:]
                     ).split(':')[0]
