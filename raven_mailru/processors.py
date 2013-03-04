@@ -69,6 +69,9 @@ class SanitizeMpopProcessor(Processor):
             frame['vars']['request'] = '\n'.join(bits)
 
     def filter_http(self, data):
+        """
+        Sanitize http data: cookies and headers.
+        """
         for n in ('cookies', 'headers'):
 
             if n not in data:
